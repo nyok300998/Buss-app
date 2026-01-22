@@ -3,215 +3,178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#007bff">
-    <title>Manajemen Bus & Riwayat Perbaikan</title>
+    <title>Manajemen Bus - Fitur CAD</title>
     <style>
         :root {
-            --primary: #007bff;
-            --success: #28a745;
-            --danger: #dc3545;
-            --warning: #ffc107;
-            --dark: #343a40;
-            --grey: #6c757d;
+            --primary: #2c3e50; --accent: #3498db; --success: #27ae60;
+            --danger: #e74c3c; --warning: #f1c40f; --light: #f8f9fa;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: #dfe6e9; margin: 0; padding: 10px; }
+        
+        .tab-menu {
+            display: flex; flex-wrap: wrap; gap: 10px; padding: 15px 0;
+            position: sticky; top: 0; background: #dfe6e9; z-index: 100; justify-content: center;
         }
 
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #f0f2f5;
-            margin: 0; padding: 15px;
+        .btn-tab {
+            background: white; border: 2px solid var(--accent); color: var(--accent);
+            padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold;
+            flex: 1 1 calc(30% - 10px); min-width: 80px; text-align: center;
         }
 
-        header {
-            text-align: center;
-            padding: 15px;
-            background: var(--primary);
-            color: white;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
+        .btn-tab.active { background: var(--accent); color: white; }
+        .btn-repair-mode { border-color: var(--danger); color: var(--danger); flex: 1 1 100%; margin-top: 5px; }
+        .btn-repair-mode.active { background: var(--danger); color: white; }
 
-        .bus-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-            gap: 20px;
-        }
-
+        .bus-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; margin-top: 10px; }
+        
         .bus-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            border-top: 6px solid var(--primary);
+            background: white; border-radius: 12px; padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-left: 6px solid #ccc;
+        }
+        .bus-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .bus-code { font-weight: bold; border: none; font-size: 1.2em; color: var(--primary); width: 60%; }
+        
+        .status-badge { padding: 4px 8px; border-radius: 5px; font-size: 0.75em; font-weight: bold; }
+        .status-ready { background: #dff9fb; color: #130f40; }
+        .status-jalan { background: #e3f2fd; color: #0d47a1; }
+        .status-servis { background: #ffebee; color: #b71c1c; }
+
+        /* Formulir Pengganti Khusus CAD */
+        .replace-section { 
+            background: #e1f5fe; padding: 10px; border-radius: 8px; 
+            margin-top: 10px; border: 1px solid #81d4fa; 
         }
 
-        .bus-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .edit-name-input {
-            font-weight: bold;
-            font-size: 1.1em;
-            border: 1px solid transparent;
-            width: 60%;
-            padding: 5px;
-        }
-
-        .edit-name-input:focus { background: #f8f9fa; border-color: var(--primary); outline: none; }
-
-        .status-badge { padding: 4px 8px; border-radius: 6px; font-size: 0.75em; font-weight: bold; }
-        .status-ready { background: #d4edda; color: #155724; }
-        .status-jalan { background: #cce5ff; color: #004085; }
-        .status-servis { background: #f8d7da; color: #721c24; }
-
-        .section-title { font-size: 0.8em; font-weight: bold; color: var(--grey); margin: 10px 0 5px 0; display: block; }
-
-        /* Kerusakan Aktif */
-        .repair-section { background: #fffbe6; padding: 10px; border-radius: 8px; border: 1px solid #ffe58f; margin-bottom: 10px; }
+        .repair-section { background: #fff9c4; padding: 10px; border-radius: 8px; margin-top: 10px; border: 1px solid #f1c40f; }
         .repair-item { 
             display: flex; justify-content: space-between; align-items: center; 
-            background: white; padding: 8px; margin-bottom: 5px; border-radius: 6px; font-size: 0.9em;
+            background: white; padding: 6px 10px; margin: 5px 0; border-radius: 5px; font-size: 0.9em;
         }
-
-        /* Riwayat Perbaikan */
-        .history-section { background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #ddd; }
-        .history-list { list-style: none; padding: 0; margin: 0; max-height: 100px; overflow-y: auto; }
-        .history-item { font-size: 0.85em; color: #555; padding: 3px 0; border-bottom: 1px solid #eee; }
-        .history-date { font-size: 0.75em; color: #999; margin-right: 5px; }
-
-        .btn-done { background: var(--success); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
-        .btn-add { background: var(--dark); color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; margin-top: 5px; font-weight: bold; cursor: pointer; }
         
-        select { width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ddd; }
-        input[type="text"] { width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; }
+        input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btn-add { background: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; margin-top: 5px; }
+        .btn-done { background: var(--success); color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>Sistem Armada 26 Bus</h1>
-        <small>Data Tersimpan Offline</small>
-    </header>
+<div class="tab-menu" id="tabMenu">
+    <button class="btn-tab active" onclick="changeFilter('1', this)">TP 1</button>
+    <button class="btn-tab" onclick="changeFilter('2', this)">TP 2</button>
+    <button class="btn-tab" onclick="changeFilter('3', this)">TP 3</button>
+    <button class="btn-tab" onclick="changeFilter('BS', this)">BS</button>
+    <button class="btn-tab" onclick="changeFilter('CAD', this)">CAD</button>
+    <button class="btn-tab btn-repair-mode" onclick="changeFilter('REPAIR', this)">🛠️ DAFTAR BUS RUSAK</button>
+</div>
 
-    <div class="bus-grid" id="bus-grid"></div>
+<div class="bus-grid" id="busGrid"></div>
 
-    <script>
-        const TOTAL_BUS = 26;
-        let dataArmada = JSON.parse(localStorage.getItem('dataArmadaBusHistory'));
+<script>
+    const storageKey = "db_bus_cad_v9";
+    let currentFilter = '1';
 
-        if (!dataArmada) {
-            dataArmada = [];
-            for (let i = 1; i <= TOTAL_BUS; i++) {
-                dataArmada.push({
-                    id: i,
-                    nama: "Bus No. " + i,
-                    status: "Ready",
-                    kerusakan: [],
-                    riwayat: []
-                });
+    function initData() {
+        let buses = [];
+        ['A', 'B', 'C'].forEach(sub => {
+            for(let r=1; r<=3; r++) {
+                for(let n=1; n<=4; n++) {
+                    buses.push({ id: `TP${r}${sub}${n}`, kode: `TP ${r}${sub}-0${n}`, filterGroup: r.toString(), status: 'Ready', kerusakan: [], riwayat: [] });
+                }
             }
-            saveData();
-        }
+        });
+        for(let i=1; i<=5; i++) buses.push({ id: `BS${i}`, kode: `BS ${i}`, filterGroup: 'BS', status: 'Ready', kerusakan: [], riwayat: [] });
+        for(let i=1; i<=2; i++) buses.push({ id: `CAD${i}`, kode: `CAD ${i}`, filterGroup: 'CAD', status: 'Ready', menggantikan: '', kerusakan: [], riwayat: [] });
+        return buses;
+    }
 
-        function saveData() {
-            localStorage.setItem('dataArmadaBusHistory', JSON.stringify(dataArmada));
-        }
+    let dataBus = JSON.parse(localStorage.getItem(storageKey)) || initData();
 
-        function renderApp() {
-            const container = document.getElementById('bus-grid');
-            container.innerHTML = '';
+    function save() { localStorage.setItem(storageKey, JSON.stringify(dataBus)); }
 
-            dataArmada.forEach(bus => {
-                const card = document.createElement('div');
-                card.className = 'bus-card';
+    function changeFilter(val, btn) {
+        currentFilter = val;
+        document.querySelectorAll('.btn-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        render();
+    }
 
-                // Kerusakan Aktif
-                let listKerusakan = bus.kerusakan.map((text, index) => `
-                    <div class="repair-item">
-                        <span>${text}</span>
-                        <button class="btn-done" onclick="selesaiPerbaikan(${bus.id}, ${index})">✅ Selesai</button>
-                    </div>
-                `).join('');
+    function render() {
+        const grid = document.getElementById('busGrid');
+        grid.innerHTML = '';
+        
+        let filtered = (currentFilter === 'REPAIR') 
+            ? dataBus.filter(b => b.status === 'Servis') 
+            : dataBus.filter(b => b.filterGroup === currentFilter);
+        
+        // List semua bus untuk dropdown CAD
+        const listSemuaBus = dataBus.filter(b => b.filterGroup !== 'CAD').map(b => b.kode);
 
-                // Riwayat Perbaikan (3 Terbaru)
-                let listRiwayat = bus.riwayat.slice().reverse().map(item => `
-                    <li class="history-item">
-                        <span class="history-date">[${item.tgl}]</span> ${item.ket}
-                    </li>
-                `).join('');
+        filtered.forEach(bus => {
+            const card = document.createElement('div');
+            card.className = 'bus-card';
+            card.style.borderLeftColor = bus.status === 'Servis' ? 'var(--danger)' : (bus.status === 'Jalan' ? 'var(--accent)' : 'var(--success)');
 
-                card.innerHTML = `
-                    <div class="bus-header">
-                        <input type="text" class="edit-name-input" value="${bus.nama}" onchange="editNama(${bus.id}, this.value)">
-                        <span class="status-badge status-${bus.status.toLowerCase()}">${bus.status}</span>
-                    </div>
-
-                    <label class="section-title">STATUS</label>
-                    <select onchange="updateStatus(${bus.id}, this.value)">
-                        <option value="Ready" ${bus.status === 'Ready' ? 'selected' : ''}>✅ Ready</option>
-                        <option value="Jalan" ${bus.status === 'Jalan' ? 'selected' : ''}>🔵 Jalan</option>
-                        <option value="Servis" ${bus.status === 'Servis' ? 'selected' : ''}>🛠️ Servis</option>
+            let cadHTML = '';
+            if(bus.filterGroup === 'CAD') {
+                cadHTML = `
+                <div class="replace-section">
+                    <label style="font-size:0.75em; font-weight:bold; color:#01579b">MENGGANTIKAN BUS:</label>
+                    <select onchange="updateBus('${bus.id}', 'menggantikan', this.value)">
+                        <option value="">-- Pilih Bus --</option>
+                        ${listSemuaBus.map(k => `<option value="${k}" ${bus.menggantikan === k ? 'selected' : ''}>${k}</option>`).join('')}
                     </select>
-
-                    <div class="repair-section">
-                        <label class="section-title">KERUSAKAN AKTIF</label>
-                        ${listKerusakan || '<p style="font-size:0.8em; color:#999; text-align:center;">Tidak ada kendala</p>'}
-                        <input type="text" id="input-bus-${bus.id}" placeholder="Input kerusakan baru...">
-                        <button class="btn-add" onclick="tambahKerusakan(${bus.id})">TAMBAH</button>
-                    </div>
-
-                    <div class="history-section">
-                        <label class="section-title">RIWAYAT PERBAIKAN SELESAI</label>
-                        <ul class="history-list">
-                            ${listRiwayat || '<li style="font-size:0.8em; color:#999;">Belum ada riwayat.</li>'}
-                        </ul>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        function editNama(id, namaBaru) {
-            const idx = dataArmada.findIndex(b => b.id === id);
-            dataArmada[idx].nama = namaBaru;
-            saveData();
-        }
-
-        function updateStatus(id, statusBaru) {
-            const idx = dataArmada.findIndex(b => b.id === id);
-            dataArmada[idx].status = statusBaru;
-            saveData();
-            renderApp();
-        }
-
-        function tambahKerusakan(id) {
-            const input = document.getElementById(`input-bus-${id}`);
-            if (input.value.trim() !== "") {
-                const idx = dataArmada.findIndex(b => b.id === id);
-                dataArmada[idx].kerusakan.push(input.value);
-                saveData();
-                renderApp();
+                </div>`;
             }
-        }
 
-        function selesaiPerbaikan(busId, itemIndex) {
-            const idx = dataArmada.findIndex(b => b.id === busId);
-            const tglSkrg = new Date().toLocaleDateString('id-ID', {day:'numeric', month:'short'});
-            
-            // Pindahkan ke riwayat
-            const itemPerbaikan = dataArmada[idx].kerusakan.splice(itemIndex, 1);
-            dataArmada[idx].riwayat.push({
-                tgl: tglSkrg,
-                ket: itemPerbaikan[0]
-            });
+            card.innerHTML = `
+                <div class="bus-header">
+                    <input class="bus-code" value="${bus.kode}" onchange="updateBus('${bus.id}', 'kode', this.value)">
+                    <span class="status-badge status-${bus.status.toLowerCase()}">${bus.status}</span>
+                </div>
+                <select onchange="updateBus('${bus.id}', 'status', this.value)">
+                    <option value="Ready" ${bus.status==='Ready'?'selected':''}>✅ Ready</option>
+                    <option value="Jalan" ${bus.status==='Jalan'?'selected':''}>🔵 Jalan</option>
+                    <option value="Servis" ${bus.status==='Servis'?'selected':''}>🛠️ Servis</option>
+                </select>
+                ${cadHTML}
+                <div class="repair-section">
+                    <label style="font-size:0.75em; font-weight:bold">LAPORAN KERUSAKAN:</label>
+                    ${bus.kerusakan.map((k, i) => `
+                        <div class="repair-item">
+                            <span>${k}</span>
+                            <button class="btn-done" onclick="selesai('${bus.id}', ${i})">Selesai</button>
+                        </div>
+                    `).join('') || '<p style="color:#7f8c8d; font-size:0.8em; margin:5px 0">Aman</p>'}
+                    <input type="text" id="in-${bus.id}" placeholder="Tulis kerusakan...">
+                    <button class="btn-add" onclick="tambah('${bus.id}')">TAMBAH</button>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
 
-            saveData();
-            renderApp();
-        }
+    function updateBus(id, key, val) {
+        dataBus.find(x => x.id === id)[key] = val;
+        save(); render();
+    }
 
-        renderApp();
-    </script>
+    function tambah(id) {
+        const input = document.getElementById(`in-${id}`);
+        if(!input.value) return;
+        dataBus.find(x => x.id === id).kerusakan.push(input.value);
+        input.value = '';
+        save(); render();
+    }
+
+    function selesai(id, idx) {
+        const b = dataBus.find(x => x.id === id);
+        const ket = b.kerusakan.splice(idx, 1);
+        b.riwayat.push({ tgl: new Date().toLocaleDateString('id-ID'), ket: ket[0] });
+        save(); render();
+    }
+
+    render();
+</script>
 </body>
-  </html>
+</html>
