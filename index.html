@@ -3,15 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Manajemen Armada Bus</title>
+    <title>Sistem Manajemen Armada - Full Progres</title>
     <style>
         :root {
             --primary: #2c3e50; --accent: #3498db; --success: #27ae60;
-            --danger: #e74c3c; --warning: #f1c40f; --light: #f8f9fa;
+            --danger: #e74c3c; --warning: #f39c12; --light: #f8f9fa;
         }
         body { font-family: 'Segoe UI', sans-serif; background: #dfe6e9; margin: 0; padding: 10px; }
         
-        /* Menu Navigasi */
         .tab-menu {
             display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 0;
             position: sticky; top: 0; background: #dfe6e9; z-index: 100; justify-content: center;
@@ -23,7 +22,7 @@
         }
         .btn-tab.active { background: var(--primary); color: white; }
 
-        /* Tombol Khusus */
+        /* Tombol Progres mencakup semua status kerja */
         .btn-repair { border-color: var(--danger); color: var(--danger); flex: 1 1 48%; }
         .btn-repair.active { background: var(--danger); color: white; }
         .btn-history { border-color: var(--success); color: var(--success); flex: 1 1 48%; }
@@ -39,7 +38,6 @@
         }
         .btn-sub.active { background: var(--accent); color: white; border-color: var(--accent); }
 
-        /* Tabel & Grid */
         .table-container { background: white; border-radius: 12px; padding: 10px; overflow-x: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
         th { background: var(--primary); color: white; padding: 12px; text-align: left; }
@@ -47,10 +45,11 @@
 
         .bus-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; }
         .bus-card { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-left: 6px solid #ccc; }
-        .status-badge { padding: 4px 8px; border-radius: 5px; font-size: 0.75em; font-weight: bold; float: right; }
-        .status-ready { background: #dff9fb; color: #130f40; }
-        .status-jalan { background: #e3f2fd; color: #0d47a1; }
-        .status-servis { background: #ffebee; color: #b71c1c; }
+        
+        .status-badge { padding: 4px 8px; border-radius: 5px; font-size: 0.7em; font-weight: bold; float: right; text-transform: uppercase; }
+        .status-menunggu { background: #fff3e0; color: #e65100; } 
+        .status-service { background: #e3f2fd; color: #0d47a1; }  
+        .status-perbaikan { background: #ffebee; color: #b71c1c; } 
 
         input, select { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
         .btn-add { background: var(--primary); color: white; border: none; padding: 10px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; }
@@ -65,7 +64,7 @@
     <button class="btn-tab" onclick="changeMain('4', this)">TP 4</button>
     <button class="btn-tab" onclick="changeMain('BS', this)">BS</button>
     <button class="btn-tab" onclick="changeMain('CAD', this)">CAD</button>
-    <button class="btn-tab btn-repair" onclick="changeMain('REPAIR', this)">🛠️ SEDANG DIPERBAIKI</button>
+    <button class="btn-tab btn-repair" onclick="changeMain('REPAIR', this)">🛠️ PROGRES</button>
     <button class="btn-tab btn-history" onclick="changeMain('HISTORY', this)">📊 REKAP SELESAI</button>
 </div>
 
@@ -73,24 +72,24 @@
 <div id="contentArea"></div>
 
 <script>
-    const storageKey = "db_bus_v14_final";
+    const storageKey = "db_bus_v16_progres";
     let mainFilter = '1';
     let subFilter = 'A';
 
+    const STATUS_LIST = ["Menunggu Part", "Service", "Dalam Perbaikan"];
+
     function initData() {
         let buses = [];
-        // TP 1-3: A-B (3 unit)
         for(let r=1; r<=3; r++){
             ['A', 'B'].forEach(g => {
-                for(let n=1; n<=3; n++) buses.push({id:`TP${r}${g}${n}`, kode:`TP ${r}${g}-0${n}`, route:r.toString(), group:g, status:'Ready', kerusakan:[], riwayat:[]});
+                for(let n=1; n<=3; n++) buses.push({id:`TP${r}${g}${n}`, kode:`TP ${r}${g}-0${n}`, route:r.toString(), group:g, status:'Service', kerusakan:[], riwayat:[]});
             });
         }
-        // TP 4: A-C (2 unit)
         ['A', 'B', 'C'].forEach(g => {
-            for(let n=1; n<=2; n++) buses.push({id:`TP4${g}${n}`, kode:`TP 4${g}-0${n}`, route:'4', group:g, status:'Ready', kerusakan:[], riwayat:[]});
+            for(let n=1; n<=2; n++) buses.push({id:`TP4${g}${n}`, kode:`TP 4${g}-0${n}`, route:'4', group:g, status:'Service', kerusakan:[], riwayat:[]});
         });
-        for(let i=1; i<=5; i++) buses.push({id:`BS${i}`, kode:`BS ${i}`, route:'BS', group:'ALL', status:'Ready', kerusakan:[], riwayat:[]});
-        for(let i=1; i<=2; i++) buses.push({id:`CAD${i}`, kode:`CAD ${i}`, route:'CAD', group:'ALL', status:'Ready', menggantikan:'', kerusakan:[], riwayat:[]});
+        for(let i=1; i<=5; i++) buses.push({id:`BS${i}`, kode:`BS ${i}`, route:'BS', group:'ALL', status:'Service', kerusakan:[], riwayat:[]});
+        for(let i=1; i<=2; i++) buses.push({id:`CAD${i}`, kode:`CAD ${i}`, route:'CAD', group:'ALL', status:'Service', menggantikan:'', kerusakan:[], riwayat:[]});
         return buses;
     }
 
@@ -120,7 +119,7 @@
         area.innerHTML = '';
 
         if (mainFilter === 'HISTORY') {
-            let html = `<div class="table-container"><table><thead><tr><th>Kode</th><th>Kerusakan</th><th>Waktu Selesai</th></tr></thead><tbody>`;
+            let html = `<div class="table-container"><table><thead><tr><th>Kode Bus</th><th>Catatan Kerusakan</th><th>Waktu Selesai</th></tr></thead><tbody>`;
             dataBus.forEach(b => b.riwayat.forEach(r => {
                 html += `<tr><td><strong>${b.kode}</strong></td><td>${r.ket}</td><td>${r.tgl}</td></tr>`;
             }));
@@ -129,9 +128,15 @@
         }
 
         let filtered = dataBus;
-        if (mainFilter === 'REPAIR') filtered = dataBus.filter(b => b.status === 'Servis');
-        else if (['BS', 'CAD'].includes(mainFilter)) filtered = dataBus.filter(b => b.route === mainFilter);
-        else filtered = dataBus.filter(b => b.route === mainFilter && b.group === subFilter);
+        if (mainFilter === 'REPAIR') {
+            // Menu PROGRES sekarang menampilkan semua bus yang statusnya Menunggu Part, Service, ATAU Dalam Perbaikan
+            // Dan yang memiliki minimal 1 item kerusakan
+            filtered = dataBus.filter(b => b.kerusakan.length > 0);
+        } else if (['BS', 'CAD'].includes(mainFilter)) {
+            filtered = dataBus.filter(b => b.route === mainFilter);
+        } else {
+            filtered = dataBus.filter(b => b.route === mainFilter && b.group === subFilter);
+        }
 
         let grid = document.createElement('div');
         grid.className = 'bus-grid';
@@ -139,16 +144,24 @@
         filtered.forEach(bus => {
             const card = document.createElement('div');
             card.className = 'bus-card';
-            card.style.borderLeftColor = bus.status === 'Servis' ? 'var(--danger)' : (bus.status === 'Jalan' ? 'var(--accent)' : 'var(--success)');
+            
+            let borderColor = 'var(--warning)';
+            let statusClass = 'status-menunggu';
+            if(bus.status === 'Service') { borderColor = 'var(--accent)'; statusClass = 'status-service'; }
+            if(bus.status === 'Dalam Perbaikan') { borderColor = 'var(--danger)'; statusClass = 'status-perbaikan'; }
+            card.style.borderLeftColor = borderColor;
             
             let cadHTML = (bus.route === 'CAD') ? `<select onchange="uBus('${bus.id}','menggantikan',this.value)"><option value="">-- Ganti Bus --</option>${dataBus.filter(x=>x.route!=='CAD').map(x=>`<option value="${x.kode}" ${bus.menggantikan===x.kode?'selected':''}>${x.kode}</option>`).join('')}</select>` : '';
 
             card.innerHTML = `
-                <div class="bus-header"><span class="status-badge status-${bus.status.toLowerCase()}">${bus.status}</span><span style="font-weight:bold">${bus.kode}</span></div>
+                <div class="bus-header">
+                    <span class="status-badge ${statusClass}">${bus.status}</span>
+                    <span style="font-weight:bold">${bus.kode}</span>
+                </div>
                 <select onchange="uBus('${bus.id}','status',this.value)">
-                    <option value="Ready" ${bus.status==='Ready'?'selected':''}>✅ Ready</option>
-                    <option value="Jalan" ${bus.status==='Jalan'?'selected':''}>🔵 Jalan</option>
-                    <option value="Servis" ${bus.status==='Servis'?'selected':''}>🛠️ Servis</option>
+                    <option value="Menunggu Part" ${bus.status==='Menunggu Part'?'selected':''}>⏳ Menunggu Part</option>
+                    <option value="Service" ${bus.status==='Service'?'selected':''}>🛠️ Service</option>
+                    <option value="Dalam Perbaikan" ${bus.status==='Dalam Perbaikan'?'selected':''}>⚙️ Dalam Perbaikan</option>
                 </select>
                 ${cadHTML}
                 <div style="background:#fff9c4; padding:10px; border-radius:8px; margin-top:8px">
