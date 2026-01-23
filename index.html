@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manajemen Bus - Fitur CAD</title>
+    <title>Sistem Manajemen Armada Bus</title>
     <style>
         :root {
             --primary: #2c3e50; --accent: #3498db; --success: #27ae60;
@@ -11,170 +11,169 @@
         }
         body { font-family: 'Segoe UI', sans-serif; background: #dfe6e9; margin: 0; padding: 10px; }
         
+        /* Menu Navigasi */
         .tab-menu {
-            display: flex; flex-wrap: wrap; gap: 10px; padding: 15px 0;
+            display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 0;
             position: sticky; top: 0; background: #dfe6e9; z-index: 100; justify-content: center;
         }
-
         .btn-tab {
-            background: white; border: 2px solid var(--accent); color: var(--accent);
-            padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold;
-            flex: 1 1 calc(30% - 10px); min-width: 80px; text-align: center;
+            background: white; border: 2px solid var(--primary); color: var(--primary);
+            padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold;
+            flex: 1 1 calc(25% - 10px); min-width: 70px; text-align: center; font-size: 0.8em;
         }
+        .btn-tab.active { background: var(--primary); color: white; }
 
-        .btn-tab.active { background: var(--accent); color: white; }
-        .btn-repair-mode { border-color: var(--danger); color: var(--danger); flex: 1 1 100%; margin-top: 5px; }
-        .btn-repair-mode.active { background: var(--danger); color: white; }
+        /* Tombol Khusus */
+        .btn-repair { border-color: var(--danger); color: var(--danger); flex: 1 1 48%; }
+        .btn-repair.active { background: var(--danger); color: white; }
+        .btn-history { border-color: var(--success); color: var(--success); flex: 1 1 48%; }
+        .btn-history.active { background: var(--success); color: white; }
 
-        .bus-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; margin-top: 10px; }
-        
-        .bus-card {
-            background: white; border-radius: 12px; padding: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-left: 6px solid #ccc;
+        .sub-menu {
+            display: flex; justify-content: center; gap: 10px; margin: 10px 0;
+            background: white; padding: 10px; border-radius: 12px;
         }
-        .bus-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .bus-code { font-weight: bold; border: none; font-size: 1.2em; color: var(--primary); width: 60%; }
-        
-        .status-badge { padding: 4px 8px; border-radius: 5px; font-size: 0.75em; font-weight: bold; }
+        .btn-sub {
+            background: #eee; border: 1px solid #ccc; padding: 8px 15px;
+            border-radius: 20px; cursor: pointer; font-weight: bold; flex: 1;
+        }
+        .btn-sub.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+        /* Tabel & Grid */
+        .table-container { background: white; border-radius: 12px; padding: 10px; overflow-x: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
+        th { background: var(--primary); color: white; padding: 12px; text-align: left; }
+        td { padding: 10px; border-bottom: 1px solid #eee; }
+
+        .bus-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; }
+        .bus-card { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-left: 6px solid #ccc; }
+        .status-badge { padding: 4px 8px; border-radius: 5px; font-size: 0.75em; font-weight: bold; float: right; }
         .status-ready { background: #dff9fb; color: #130f40; }
         .status-jalan { background: #e3f2fd; color: #0d47a1; }
         .status-servis { background: #ffebee; color: #b71c1c; }
 
-        /* Formulir Pengganti Khusus CAD */
-        .replace-section { 
-            background: #e1f5fe; padding: 10px; border-radius: 8px; 
-            margin-top: 10px; border: 1px solid #81d4fa; 
-        }
-
-        .repair-section { background: #fff9c4; padding: 10px; border-radius: 8px; margin-top: 10px; border: 1px solid #f1c40f; }
-        .repair-item { 
-            display: flex; justify-content: space-between; align-items: center; 
-            background: white; padding: 6px 10px; margin: 5px 0; border-radius: 5px; font-size: 0.9em;
-        }
-        
-        input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .btn-add { background: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; margin-top: 5px; }
-        .btn-done { background: var(--success); color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; }
+        input, select { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btn-add { background: var(--primary); color: white; border: none; padding: 10px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div class="tab-menu" id="tabMenu">
-    <button class="btn-tab active" onclick="changeFilter('1', this)">TP 1</button>
-    <button class="btn-tab" onclick="changeFilter('2', this)">TP 2</button>
-    <button class="btn-tab" onclick="changeFilter('3', this)">TP 3</button>
-    <button class="btn-tab" onclick="changeFilter('BS', this)">BS</button>
-    <button class="btn-tab" onclick="changeFilter('CAD', this)">CAD</button>
-    <button class="btn-tab btn-repair-mode" onclick="changeFilter('REPAIR', this)">🛠️ DAFTAR BUS RUSAK</button>
+<div class="tab-menu">
+    <button class="btn-tab active" onclick="changeMain('1', this)">TP 1</button>
+    <button class="btn-tab" onclick="changeMain('2', this)">TP 2</button>
+    <button class="btn-tab" onclick="changeMain('3', this)">TP 3</button>
+    <button class="btn-tab" onclick="changeMain('4', this)">TP 4</button>
+    <button class="btn-tab" onclick="changeMain('BS', this)">BS</button>
+    <button class="btn-tab" onclick="changeMain('CAD', this)">CAD</button>
+    <button class="btn-tab btn-repair" onclick="changeMain('REPAIR', this)">🛠️ SEDANG DIPERBAIKI</button>
+    <button class="btn-tab btn-history" onclick="changeMain('HISTORY', this)">📊 REKAP SELESAI</button>
 </div>
 
-<div class="bus-grid" id="busGrid"></div>
+<div class="sub-menu" id="subMenu"></div>
+<div id="contentArea"></div>
 
 <script>
-    const storageKey = "db_bus_cad_v9";
-    let currentFilter = '1';
+    const storageKey = "db_bus_v14_final";
+    let mainFilter = '1';
+    let subFilter = 'A';
 
     function initData() {
         let buses = [];
-        ['A', 'B', 'C'].forEach(sub => {
-            for(let r=1; r<=3; r++) {
-                for(let n=1; n<=4; n++) {
-                    buses.push({ id: `TP${r}${sub}${n}`, kode: `TP ${r}${sub}-0${n}`, filterGroup: r.toString(), status: 'Ready', kerusakan: [], riwayat: [] });
-                }
-            }
+        // TP 1-3: A-B (3 unit)
+        for(let r=1; r<=3; r++){
+            ['A', 'B'].forEach(g => {
+                for(let n=1; n<=3; n++) buses.push({id:`TP${r}${g}${n}`, kode:`TP ${r}${g}-0${n}`, route:r.toString(), group:g, status:'Ready', kerusakan:[], riwayat:[]});
+            });
+        }
+        // TP 4: A-C (2 unit)
+        ['A', 'B', 'C'].forEach(g => {
+            for(let n=1; n<=2; n++) buses.push({id:`TP4${g}${n}`, kode:`TP 4${g}-0${n}`, route:'4', group:g, status:'Ready', kerusakan:[], riwayat:[]});
         });
-        for(let i=1; i<=5; i++) buses.push({ id: `BS${i}`, kode: `BS ${i}`, filterGroup: 'BS', status: 'Ready', kerusakan: [], riwayat: [] });
-        for(let i=1; i<=2; i++) buses.push({ id: `CAD${i}`, kode: `CAD ${i}`, filterGroup: 'CAD', status: 'Ready', menggantikan: '', kerusakan: [], riwayat: [] });
+        for(let i=1; i<=5; i++) buses.push({id:`BS${i}`, kode:`BS ${i}`, route:'BS', group:'ALL', status:'Ready', kerusakan:[], riwayat:[]});
+        for(let i=1; i<=2; i++) buses.push({id:`CAD${i}`, kode:`CAD ${i}`, route:'CAD', group:'ALL', status:'Ready', menggantikan:'', kerusakan:[], riwayat:[]});
         return buses;
     }
 
     let dataBus = JSON.parse(localStorage.getItem(storageKey)) || initData();
-
     function save() { localStorage.setItem(storageKey, JSON.stringify(dataBus)); }
 
-    function changeFilter(val, btn) {
-        currentFilter = val;
-        document.querySelectorAll('.btn-tab').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        render();
+    function updateSubMenu() {
+        const sub = document.getElementById('subMenu');
+        if (['BS', 'CAD', 'REPAIR', 'HISTORY'].includes(mainFilter)) { sub.style.display = 'none'; return; }
+        sub.style.display = 'flex';
+        let grps = (mainFilter === '4') ? ['A', 'B', 'C'] : ['A', 'B'];
+        if (mainFilter !== '4' && subFilter === 'C') subFilter = 'A';
+        sub.innerHTML = grps.map(g => `<button class="btn-sub ${subFilter===g?'active':''}" onclick="changeSub('${g}')">Grup ${g}</button>`).join('');
     }
 
-    function render() {
-        const grid = document.getElementById('busGrid');
-        grid.innerHTML = '';
-        
-        let filtered = (currentFilter === 'REPAIR') 
-            ? dataBus.filter(b => b.status === 'Servis') 
-            : dataBus.filter(b => b.filterGroup === currentFilter);
-        
-        // List semua bus untuk dropdown CAD
-        const listSemuaBus = dataBus.filter(b => b.filterGroup !== 'CAD').map(b => b.kode);
+    function changeMain(v, btn) {
+        mainFilter = v;
+        document.querySelectorAll('.btn-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        updateSubMenu(); render();
+    }
 
+    function changeSub(v) { subFilter = v; updateSubMenu(); render(); }
+
+    function render() {
+        const area = document.getElementById('contentArea');
+        area.innerHTML = '';
+
+        if (mainFilter === 'HISTORY') {
+            let html = `<div class="table-container"><table><thead><tr><th>Kode</th><th>Kerusakan</th><th>Waktu Selesai</th></tr></thead><tbody>`;
+            dataBus.forEach(b => b.riwayat.forEach(r => {
+                html += `<tr><td><strong>${b.kode}</strong></td><td>${r.ket}</td><td>${r.tgl}</td></tr>`;
+            }));
+            area.innerHTML = html + `</tbody></table></div>`;
+            return;
+        }
+
+        let filtered = dataBus;
+        if (mainFilter === 'REPAIR') filtered = dataBus.filter(b => b.status === 'Servis');
+        else if (['BS', 'CAD'].includes(mainFilter)) filtered = dataBus.filter(b => b.route === mainFilter);
+        else filtered = dataBus.filter(b => b.route === mainFilter && b.group === subFilter);
+
+        let grid = document.createElement('div');
+        grid.className = 'bus-grid';
+        
         filtered.forEach(bus => {
             const card = document.createElement('div');
             card.className = 'bus-card';
             card.style.borderLeftColor = bus.status === 'Servis' ? 'var(--danger)' : (bus.status === 'Jalan' ? 'var(--accent)' : 'var(--success)');
-
-            let cadHTML = '';
-            if(bus.filterGroup === 'CAD') {
-                cadHTML = `
-                <div class="replace-section">
-                    <label style="font-size:0.75em; font-weight:bold; color:#01579b">MENGGANTIKAN BUS:</label>
-                    <select onchange="updateBus('${bus.id}', 'menggantikan', this.value)">
-                        <option value="">-- Pilih Bus --</option>
-                        ${listSemuaBus.map(k => `<option value="${k}" ${bus.menggantikan === k ? 'selected' : ''}>${k}</option>`).join('')}
-                    </select>
-                </div>`;
-            }
+            
+            let cadHTML = (bus.route === 'CAD') ? `<select onchange="uBus('${bus.id}','menggantikan',this.value)"><option value="">-- Ganti Bus --</option>${dataBus.filter(x=>x.route!=='CAD').map(x=>`<option value="${x.kode}" ${bus.menggantikan===x.kode?'selected':''}>${x.kode}</option>`).join('')}</select>` : '';
 
             card.innerHTML = `
-                <div class="bus-header">
-                    <input class="bus-code" value="${bus.kode}" onchange="updateBus('${bus.id}', 'kode', this.value)">
-                    <span class="status-badge status-${bus.status.toLowerCase()}">${bus.status}</span>
-                </div>
-                <select onchange="updateBus('${bus.id}', 'status', this.value)">
+                <div class="bus-header"><span class="status-badge status-${bus.status.toLowerCase()}">${bus.status}</span><span style="font-weight:bold">${bus.kode}</span></div>
+                <select onchange="uBus('${bus.id}','status',this.value)">
                     <option value="Ready" ${bus.status==='Ready'?'selected':''}>✅ Ready</option>
                     <option value="Jalan" ${bus.status==='Jalan'?'selected':''}>🔵 Jalan</option>
                     <option value="Servis" ${bus.status==='Servis'?'selected':''}>🛠️ Servis</option>
                 </select>
                 ${cadHTML}
-                <div class="repair-section">
-                    <label style="font-size:0.75em; font-weight:bold">LAPORAN KERUSAKAN:</label>
-                    ${bus.kerusakan.map((k, i) => `
-                        <div class="repair-item">
-                            <span>${k}</span>
-                            <button class="btn-done" onclick="selesai('${bus.id}', ${i})">Selesai</button>
-                        </div>
-                    `).join('') || '<p style="color:#7f8c8d; font-size:0.8em; margin:5px 0">Aman</p>'}
-                    <input type="text" id="in-${bus.id}" placeholder="Tulis kerusakan...">
-                    <button class="btn-add" onclick="tambah('${bus.id}')">TAMBAH</button>
-                </div>
-            `;
+                <div style="background:#fff9c4; padding:10px; border-radius:8px; margin-top:8px">
+                    ${bus.kerusakan.map((k, i) => `<div style="display:flex; justify-content:space-between; margin:4px 0; font-size:0.85em"><span>• ${k}</span><button onclick="done('${bus.id}',${i})" style="background:var(--success); color:white; border:none; padding:2px 8px; border-radius:4px">Selesai</button></div>`).join('') || '<p style="font-size:0.8em; color:#777">Kondisi Aman</p>'}
+                    <input type="text" id="in-${bus.id}" placeholder="Input kerusakan..."><button class="btn-add" onclick="add('${bus.id}')">SIMPAN</button>
+                </div>`;
             grid.appendChild(card);
         });
+        area.appendChild(grid);
     }
 
-    function updateBus(id, key, val) {
-        dataBus.find(x => x.id === id)[key] = val;
-        save(); render();
-    }
-
-    function tambah(id) {
+    function uBus(id, k, v) { dataBus.find(x => x.id === id)[k] = v; save(); render(); }
+    function add(id) { 
         const input = document.getElementById(`in-${id}`);
         if(!input.value) return;
         dataBus.find(x => x.id === id).kerusakan.push(input.value);
-        input.value = '';
-        save(); render();
+        input.value = ''; save(); render();
     }
-
-    function selesai(id, idx) {
+    function done(id, idx) {
         const b = dataBus.find(x => x.id === id);
         const ket = b.kerusakan.splice(idx, 1);
-        b.riwayat.push({ tgl: new Date().toLocaleDateString('id-ID'), ket: ket[0] });
+        b.riwayat.push({ tgl: new Date().toLocaleString('id-ID',{dateStyle:'short',timeStyle:'short'}), ket: ket[0] });
         save(); render();
     }
-
-    render();
+    updateSubMenu(); render();
 </script>
 </body>
 </html>
